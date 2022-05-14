@@ -1,0 +1,188 @@
+name: 'Syncpack: Synchronise monorepo dependency versions'
+description: 'Always use the same versions of each dependency'
+inputs:
+  bot-email:
+    description: 'GitHub Email for the Syncpack Bot'
+    required: false
+    default: 'github-actions@github.com'
+  bot-username:
+    description: 'GitHub Username for the Syncpack Bot'
+    required: false
+    default: 'github-actions[bot]'
+  commit-message:
+    description: 'Commit Message to use when applying fixes'
+    required: false
+    default: 'chore(syncpack): format and sync package.json files'
+  format-mismatches:
+    description: '"fix" | "ignore"'
+    required: false
+    default: 'fix'
+  lockfile-mismatches:
+    description: '"fix" | "ignore"'
+    required: false
+    default: 'fix'
+  package-manager-version:
+    description: 'The Semver version of npm, yarn, or pnpm'
+    required: false
+    default: 'latest'
+  package-manager:
+    description: 'Possible values npm | yarn | pnpm'
+    required: false
+    default: 'npm'
+  semver-range-mismatches:
+    description: '"lint" | "fix" | "ignore"'
+    required: false
+    default: 'fix'
+  syncpack-version:
+    description: 'The Semver version of syncpack'
+    required: false
+    default: '7.2.1'
+  version-mismatches:
+    description: '"lint" | "fix" | "ignore"'
+    required: false
+    default: 'fix'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout Branch
+      id: checkout-branch
+      shell: bash
+      run: |
+        git config pull.rebase true
+        git fetch
+        git checkout $GITHUB_HEAD_REF
+        git pull origin $GITHUB_HEAD_REF
+
+    - name: Install Syncpack
+      id: install-syncpack
+      shell: bash
+      run: npm i -g "syncpack@${{ inputs.syncpack-version }}"
+
+    # Version Mismatches
+    # https://github.com/JamieMason/syncpack#list-mismatches
+    # https://github.com/JamieMason/syncpack#fix-mismatches
+
+    - if: ${{ inputs.version-mismatches == 'fix' }}
+      name: syncpack fix-mismatches
+      id: syncpack-fix-mismatches
+      shell: bash
+      run: echo "::set-output name=stdout::$(syncpack fix-mismatches)"
+
+    - if: ${{ inputs.version-mismatches == 'lint' }}
+      name: syncpack list-mismatches
+      id: syncpack-list-mismatches
+      shell: bash
+      run: echo "::set-output name=stdout::$(syncpack list-mismatches)"
+
+    # Format Mismatches
+    # https://github.com/JamieMason/syncpack#format
+
+    - if: ${{ inputs.format-mismatches == 'fix' }}
+      name: syncpack format
+      id: syncpack-format
+      shell: bash
+      run: echo "::set-output name=stdout::$(syncpack format)"
+
+    # Semver Range Mismatches
+    # https://github.com/JamieMason/syncpack#lint-semver-ranges
+    # https://github.com/JamieMason/syncpack#set-semver-ranges
+
+    - if: ${{ inputs.semver-range-mismatches == 'fix' }}
+      name: syncpack set-semver-ranges
+      id: syncpack-set-semver-ranges
+      shell: bash
+      run: echo "::set-output name=stdout::$(syncpack set-semver-ranges)"
+
+    - if: ${{ inputs.semver-range-mismatches == 'lint' }}
+      name: syncpack lint-semver-ranges
+      id: syncpack-lint-semver-ranges
+      shell: bash
+      run: echo "::set-output name=stdout::$(syncpack lint-semver-ranges)"
+
+    - if: ${{ inputs.lockfile-mismatches != 'ignore' }}
+      name: Update Lockfile
+      id: update-lockfile
+      shell: bash
+      run: |
+        if [ "${{ inputs.package-manager }}" = "yarn" ]; then
+          npm i -g "yarn@${{ inputs.package-manager-version }}"
+          echo "::set-output name=stdout::$(yarn install)"
+        elif [ "${{ inputs.package-manager }}" = "pnpm" ]; then
+          npm i -g "pnpm@${{ inputs.package-manager-version }}"
+          echo "::set-output name=stdout::$(pnpm install)"
+        else
+          npm i -g "npm@${{ inputs.package-manager-version }}"
+          echo "::set-output name=stdout::$(npm install)"
+        fi
+
+    - name: Detect Changes
+      id: detect-changes
+      shell: bash
+      run: |
+        if [[ `git status --porcelain` ]]; then
+          echo "::set-output name=has-changes::true"
+        fi
+
+    - if: ${{ inputs.version-mismatches == 'fix' || inputs.format-mismatches == 'fix' || inputs.semver-range-mismatches == 'fix' }}
+      name: Commit and Push
+      id: commit-and-push
+      shell: bash
+      run: |
+        git add .
+        git config user.name "${{ inputs.bot-username }}"
+        git config user.email "${{ inputs.bot-email }}"
+        git commit -m "${{ inputs.commit-message }}"
+        git push origin HEAD:"$GITHUB_HEAD_REF"
+        git push
+
+    - name: Get Comment Body
+      id: get-comment-body
+      shell: bash
+      run: |
+        if [ "${{ steps.detect-changes.outputs.has-changes }}" = "true" ]; then
+          if [ "${{ inputs.version-mismatches }}" = "fix" ] || [ "${{ inputs.format-mismatches }}" = "fix" ] || [ "${{ inputs.semver-range-mismatches }}" = "fix" ]; then
+            body="
+            🟡 Issues found and fixed
+
+            $ syncpack fix-mismatches
+            ${{ steps.syncpack-fix-mismatches.outputs.stdout }}
+
+            $ syncpack format
+            ${{ steps.syncpack-format.outputs.stdout }}
+
+            $ syncpack set-semver-ranges
+            ${{ steps.syncpack-set-semver-ranges.outputs.stdout }}
+            "
+          fi
+        else
+          body="
+          \`\`\`
+          🟢 All checks passed
+          \`\`\`
+          "
+        fi
+        body="${body//'%'/'%25'}"
+        body="${body//$'\n'/'%0A'}"
+        body="${body//$'\r'/'%0D'}"
+        echo "::set-output name=body::$body"
+
+    - name: Find Comment
+      id: find-comment
+      uses: peter-evans/find-comment@v2
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-author: ${{ inputs.bot-username }}
+        body-includes: '<!-- syncpack-bot -->'
+
+    - name: Upsert Comment
+      id: upsert-comment
+      uses: peter-evans/create-or-update-comment@v2
+      with:
+        comment-id: ${{ steps.find-comment.outputs.comment-id }}
+        issue-number: ${{ github.event.pull_request.number }}
+        edit-mode: replace
+        body: |
+          Synchronise monorepo dependency versions with [`syncpack`](https://github.com/JamieMason/syncpack)
+          ${{ steps.get-comment-body.outputs.body }}
+          <!-- syncpack-bot -->
