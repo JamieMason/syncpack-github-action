@@ -1,5 +1,10 @@
 name: 'Syncpack: Synchronise monorepo dependency versions'
 description: 'Always use the same versions of each dependency'
+
+branding:
+  icon: 'cloud-lightning'
+  color: 'green'
+
 inputs:
   bot-email:
     description: 'GitHub Email for the Syncpack Bot'
@@ -45,7 +50,22 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Checkout Branch
+    - name: Init
+      id: init
+      shell: bash
+      run: |
+        if [ "${{ inputs.version-mismatches }}" = "fix" ] || [ "${{ inputs.format-mismatches }}" = "fix" ] || [ "${{ inputs.semver-range-mismatches }}" = "fix" ]; then
+          echo "::set-output name=anyFixEnabled::true"
+        fi
+
+    - name: Install Syncpack
+      id: install-syncpack
+      shell: bash
+      run: |
+        npm i -g "syncpack@${{ inputs.syncpack-version }}"
+
+    - if: ${{ steps.init.anyFixEnabled == 'true' }}
+      name: Checkout Branch
       id: checkout-branch
       shell: bash
       run: |
@@ -54,35 +74,46 @@ runs:
         git checkout $GITHUB_HEAD_REF
         git pull origin $GITHUB_HEAD_REF
 
-    - name: Install Syncpack
-      id: install-syncpack
-      shell: bash
-      run: npm i -g "syncpack@${{ inputs.syncpack-version }}"
-
     # Version Mismatches
     # https://github.com/JamieMason/syncpack#list-mismatches
     # https://github.com/JamieMason/syncpack#fix-mismatches
 
     - if: ${{ inputs.version-mismatches == 'fix' }}
       name: syncpack fix-mismatches
-      id: syncpack-fix-mismatches
+      id: version-mismatches-fix
       shell: bash
-      run: echo "::set-output name=stdout::$(syncpack fix-mismatches)"
-
-    - if: ${{ inputs.version-mismatches == 'lint' }}
-      name: syncpack list-mismatches
-      id: syncpack-list-mismatches
-      shell: bash
-      run: echo "::set-output name=stdout::$(syncpack list-mismatches)"
+      run: |
+        set +e
+        value="$(syncpack fix-mismatches)"
+        value="${value//'%'/'%25'}"
+        value="${value//$'\n'/'%0A'}"
+        value="${value//$'\r'/'%0D'}"
+        echo "::set-output name=stdout::$value"
+        set -e
+        if [[ `git diff --name-only` ]]; then
+          git add .
+          echo "::set-output name=has-changes::true"
+        fi
 
     # Format Mismatches
     # https://github.com/JamieMason/syncpack#format
 
     - if: ${{ inputs.format-mismatches == 'fix' }}
       name: syncpack format
-      id: syncpack-format
+      id: format-mismatches-fix
       shell: bash
-      run: echo "::set-output name=stdout::$(syncpack format)"
+      run: |
+        set +e
+        value="$(syncpack format)"
+        value="${value//'%'/'%25'}"
+        value="${value//$'\n'/'%0A'}"
+        value="${value//$'\r'/'%0D'}"
+        echo "::set-output name=stdout::$value"
+        set -e
+        if [[ `git diff --name-only` ]]; then
+          git add .
+          echo "::set-output name=has-changes::true"
+        fi
 
     # Semver Range Mismatches
     # https://github.com/JamieMason/syncpack#lint-semver-ranges
@@ -90,33 +121,39 @@ runs:
 
     - if: ${{ inputs.semver-range-mismatches == 'fix' }}
       name: syncpack set-semver-ranges
-      id: syncpack-set-semver-ranges
+      id: semver-range-mismatches-fix
       shell: bash
-      run: echo "::set-output name=stdout::$(syncpack set-semver-ranges)"
-
-    - if: ${{ inputs.semver-range-mismatches == 'lint' }}
-      name: syncpack lint-semver-ranges
-      id: syncpack-lint-semver-ranges
-      shell: bash
-      run: echo "::set-output name=stdout::$(syncpack lint-semver-ranges)"
+      run: |
+        set +e
+        value="$(syncpack set-semver-ranges)"
+        value="${value//'%'/'%25'}"
+        value="${value//$'\n'/'%0A'}"
+        value="${value//$'\r'/'%0D'}"
+        echo "::set-output name=stdout::$value"
+        set -e
+        if [[ `git diff --name-only` ]]; then
+          git add .
+          echo "::set-output name=has-changes::true"
+        fi
 
     - if: ${{ inputs.lockfile-mismatches != 'ignore' }}
       name: Update Lockfile
-      id: update-lockfile
+      id: lockfile-mismatches-fix
       shell: bash
       run: |
         if [ "${{ inputs.package-manager }}" = "yarn" ]; then
           npm i -g "yarn@${{ inputs.package-manager-version }}"
-          echo "::set-output name=stdout::$(yarn install)"
+          yarn install
         elif [ "${{ inputs.package-manager }}" = "pnpm" ]; then
           npm i -g "pnpm@${{ inputs.package-manager-version }}"
-          echo "::set-output name=stdout::$(pnpm install)"
+          pnpm install
         else
           npm i -g "npm@${{ inputs.package-manager-version }}"
-          echo "::set-output name=stdout::$(npm install)"
+          npm install
         fi
 
-    - name: Detect Changes
+    - if: ${{ steps.init.anyFixEnabled == 'true' }}
+      name: Detect Changes
       id: detect-changes
       shell: bash
       run: |
@@ -124,50 +161,130 @@ runs:
           echo "::set-output name=has-changes::true"
         fi
 
-    - if: ${{ inputs.version-mismatches == 'fix' || inputs.format-mismatches == 'fix' || inputs.semver-range-mismatches == 'fix' }}
+    - if: ${{ steps.init.anyFixEnabled == 'true' }}
       name: Commit and Push
       id: commit-and-push
       shell: bash
       run: |
-        git add .
-        git config user.name "${{ inputs.bot-username }}"
-        git config user.email "${{ inputs.bot-email }}"
-        git commit -m "${{ inputs.commit-message }}"
-        git push origin HEAD:"$GITHUB_HEAD_REF"
-        git push
+        if [ "${{ steps.detect-changes.outputs.has-changes }}" = "true" ]; then
+          git add .
+          git config user.name "${{ inputs.bot-username }}"
+          git config user.email "${{ inputs.bot-email }}"
+          git commit -m "${{ inputs.commit-message }}"
+          git push origin HEAD:"$GITHUB_HEAD_REF"
+          git push
+        fi
 
-    - name: Get Comment Body
+    - if: always()
+      name: syncpack list-mismatches
+      id: version-mismatches-lint
+      shell: bash
+      run: |
+        if [ "${{ inputs.version-mismatches }}" = "lint" ]; then
+          set +e
+          value="$(syncpack list-mismatches)"
+          value="${value//'%'/'%25'}"
+          value="${value//$'\n'/'%0A'}"
+          value="${value//$'\r'/'%0D'}"
+          echo "::set-output name=stdout::$value"
+          set -e
+          syncpack list-mismatches
+        fi
+
+    - if: always()
+      name: syncpack lint-semver-ranges
+      id: semver-range-mismatches-lint
+      shell: bash
+      run: |
+        if [ "${{ inputs.semver-range-mismatches }}" = "lint" ]; then
+          set +e
+          value="$(syncpack lint-semver-ranges)"
+          value="${value//'%'/'%25'}"
+          value="${value//$'\n'/'%0A'}"
+          value="${value//$'\r'/'%0D'}"
+          echo "::set-output name=stdout::$value"
+          set -e
+          syncpack lint-semver-ranges
+        fi
+
+    - if: always()
+      name: Get Comment Body
       id: get-comment-body
       shell: bash
       run: |
-        if [ "${{ steps.detect-changes.outputs.has-changes }}" = "true" ]; then
-          if [ "${{ inputs.version-mismatches }}" = "fix" ] || [ "${{ inputs.format-mismatches }}" = "fix" ] || [ "${{ inputs.semver-range-mismatches }}" = "fix" ]; then
-            body="
-            🟡 Issues found and fixed
-
-            $ syncpack fix-mismatches
-            ${{ steps.syncpack-fix-mismatches.outputs.stdout }}
-
-            $ syncpack format
-            ${{ steps.syncpack-format.outputs.stdout }}
-
-            $ syncpack set-semver-ranges
-            ${{ steps.syncpack-set-semver-ranges.outputs.stdout }}
-            "
+        touch comment.txt
+        if [ "${{ inputs.version-mismatches }}" = "lint" ]; then
+          if [ "${{ steps.version-mismatches-lint.outcome }}" = "success" ]; then
+            echo '```' >> comment.txt
+            echo "$ syncpack list-mismatches" >> comment.txt
+            echo "✓" >> comment.txt
+            echo '```' >> comment.txt
+            echo "" >> comment.txt
           fi
-        else
-          body="
-          \`\`\`
-          🟢 All checks passed
-          \`\`\`
-          "
+          if [ "${{ steps.version-mismatches-lint.outcome }}" = "failure" ]; then
+            echo "" >> comment.txt
+            echo '```' >> comment.txt
+            echo "$ syncpack list-mismatches" >> comment.txt
+            echo "${{ steps.version-mismatches-lint.outputs.stdout }}" >> comment.txt
+            echo '```' >> comment.txt
+            echo "" >> comment.txt
+          fi
         fi
+        if [ "${{ inputs.semver-range-mismatches }}" = "lint" ]; then
+          if [ "${{ steps.semver-range-mismatches-lint.outcome }}" = "success" ]; then
+            echo '```' >> comment.txt
+            echo "$ syncpack lint-semver-ranges" >> comment.txt
+            echo "✓" >> comment.txt
+            echo '```' >> comment.txt
+            echo "" >> comment.txt
+          fi
+          if [ "${{ steps.semver-range-mismatches-lint.outcome }}" = "failure" ]; then
+            echo "" >> comment.txt
+            echo '```' >> comment.txt
+            echo "$ syncpack lint-semver-ranges" >> comment.txt
+            echo "${{ steps.semver-range-mismatches-lint.outputs.stdout }}" >> comment.txt
+            echo '```' >> comment.txt
+            echo "" >> comment.txt
+          fi
+        fi
+        if [ "${{ inputs.version-mismatches }}" = "fix" ]; then
+          if [ "${{ steps.version-mismatches-fix.outputs.has-changes }}" = "true" ]; then
+            echo "" >> comment.txt
+            echo '```' >> comment.txt
+            echo "$ syncpack fix-mismatches" >> comment.txt
+            echo "${{ steps.version-mismatches-fix.outputs.stdout }}" >> comment.txt
+            echo '```' >> comment.txt
+            echo "" >> comment.txt
+          fi
+        fi
+        if [ "${{ inputs.format-mismatches }}" = "fix" ]; then
+          if [ "${{ steps.format-mismatches-fix.outputs.has-changes }}" = "true" ]; then
+            echo "" >> comment.txt
+            echo '```' >> comment.txt
+            echo "$ syncpack format" >> comment.txt
+            echo "${{ steps.format-mismatches-fix.outputs.stdout }}" >> comment.txt
+            echo '```' >> comment.txt
+            echo "" >> comment.txt
+          fi
+        fi
+        if [ "${{ inputs.semver-range-mismatches }}" = "fix" ]; then
+          if [ "${{ steps.semver-range-mismatches-fix.outputs.has-changes }}" = "true" ]; then
+            echo "" >> comment.txt
+            echo '```' >> comment.txt
+            echo "$ syncpack set-semver-ranges" >> comment.txt
+            echo "${{ steps.semver-range-mismatches-fix.outputs.stdout }}" >> comment.txt
+            echo '```' >> comment.txt
+            echo "" >> comment.txt
+          fi
+        fi
+        body=$(cat comment.txt)
         body="${body//'%'/'%25'}"
         body="${body//$'\n'/'%0A'}"
         body="${body//$'\r'/'%0D'}"
-        echo "::set-output name=body::$body"
+        echo "::set-output name=body::"$body""
 
-    - name: Find Comment
+    - if: always()
+      name: Find Comment
       id: find-comment
       uses: peter-evans/find-comment@v2
       with:
@@ -175,7 +292,8 @@ runs:
         comment-author: ${{ inputs.bot-username }}
         body-includes: '<!-- syncpack-bot -->'
 
-    - name: Upsert Comment
+    - if: always()
+      name: Upsert Comment
       id: upsert-comment
       uses: peter-evans/create-or-update-comment@v2
       with:

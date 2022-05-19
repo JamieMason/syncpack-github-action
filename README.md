@@ -54,7 +54,7 @@ A GitHub Action to Synchronise monorepo dependency versions with [`syncpack`](ht
          - uses: actions/setup-node@v3
            with:
              node-version: 16
-         - uses: JamieMason/syncpack-github-action@0.1.0
+         - uses: JamieMason/syncpack-github-action@0.2.0
            env:
              # If any options are set to 'fix' then
              # env.GITHUB_TOKEN is needed to push to PRs
