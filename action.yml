@@ -146,7 +146,7 @@ runs:
           yarn install
         elif [ "${{ inputs.package-manager }}" = "pnpm" ]; then
           npm i -g "pnpm@${{ inputs.package-manager-version }}"
-          pnpm install
+          pnpm install --no-frozen-lockfile
         else
           npm i -g "npm@${{ inputs.package-manager-version }}"
           npm install
