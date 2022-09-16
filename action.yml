@@ -64,7 +64,7 @@ runs:
       run: |
         npm i -g "syncpack@${{ inputs.syncpack-version }}"
 
-    - if: ${{ steps.init.anyFixEnabled == 'true' }}
+    - if: ${{ steps.init.outputs.anyFixEnabled == 'true' }}
       name: Checkout Branch
       id: checkout-branch
       shell: bash
@@ -152,7 +152,7 @@ runs:
           npm install
         fi
 
-    - if: ${{ steps.init.anyFixEnabled == 'true' }}
+    - if: ${{ steps.init.outputs.anyFixEnabled == 'true' }}
       name: Detect Changes
       id: detect-changes
       shell: bash
@@ -161,7 +161,7 @@ runs:
           echo "::set-output name=has-changes::true"
         fi
 
-    - if: ${{ steps.init.anyFixEnabled == 'true' }}
+    - if: ${{ steps.init.outputs.anyFixEnabled == 'true' }}
       name: Commit and Push
       id: commit-and-push
       shell: bash
