@@ -46,6 +46,14 @@ inputs:
     description: '"lint" | "fix" | "ignore"'
     required: false
     default: 'fix'
+  branch:
+    description: 'Name of branch to open'
+    required: false
+    default: ''
+  base-branch:
+    description: 'Name of branch to create pull request against'
+    required: false     
+    default: 'main'
 
 runs:
   using: 'composite'
@@ -64,7 +72,7 @@ runs:
       run: |
         npm i -g "syncpack@${{ inputs.syncpack-version }}"
 
-    - if: ${{ steps.init.outputs.anyFixEnabled == 'true' }}
+    - if: ${{ steps.init.outputs.anyFixEnabled == 'true' && inputs.branch != '' }}
       name: Checkout Branch
       id: checkout-branch
       shell: bash
@@ -73,6 +81,15 @@ runs:
         git fetch
         git checkout $GITHUB_HEAD_REF
         git pull origin $GITHUB_HEAD_REF
+    
+    - if: ${{ inputs.branch != '' }}
+      name: Create Branch
+      id: create-branch
+      shell: bash
+      run: |
+        git fetch
+        git pull origin $GITHUB_HEAD_REF
+        git checkout -b ${{ inputs.branch }}
 
     # Version Mismatches
     # https://github.com/JamieMason/syncpack#list-mismatches
