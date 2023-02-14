@@ -232,81 +232,81 @@ runs:
         reviewers: "zerodom30"
         branch: ${{ inputs.branch }}
 
-    - if: always()
-      name: Get Comment Body
-      id: get-comment-body
-      shell: bash
-      run: |
-        touch comment.txt
-        if [ "${{ inputs.version-mismatches }}" = "lint" ]; then
-          if [ "${{ steps.version-mismatches-lint.outcome }}" = "success" ]; then
-            echo '```' >> comment.txt
-            echo "$ syncpack list-mismatches" >> comment.txt
-            echo "✓" >> comment.txt
-            echo '```' >> comment.txt
-            echo "" >> comment.txt
-          fi
-          if [ "${{ steps.version-mismatches-lint.outcome }}" = "failure" ]; then
-            echo "" >> comment.txt
-            echo '```' >> comment.txt
-            echo "$ syncpack list-mismatches" >> comment.txt
-            echo "${{ steps.version-mismatches-lint.outputs.stdout }}" >> comment.txt
-            echo '```' >> comment.txt
-            echo "" >> comment.txt
-          fi
-        fi
-        if [ "${{ inputs.semver-range-mismatches }}" = "lint" ]; then
-          if [ "${{ steps.semver-range-mismatches-lint.outcome }}" = "success" ]; then
-            echo '```' >> comment.txt
-            echo "$ syncpack lint-semver-ranges" >> comment.txt
-            echo "✓" >> comment.txt
-            echo '```' >> comment.txt
-            echo "" >> comment.txt
-          fi
-          if [ "${{ steps.semver-range-mismatches-lint.outcome }}" = "failure" ]; then
-            echo "" >> comment.txt
-            echo '```' >> comment.txt
-            echo "$ syncpack lint-semver-ranges" >> comment.txt
-            echo "${{ steps.semver-range-mismatches-lint.outputs.stdout }}" >> comment.txt
-            echo '```' >> comment.txt
-            echo "" >> comment.txt
-          fi
-        fi
-        if [ "${{ inputs.version-mismatches }}" = "fix" ]; then
-          if [ "${{ steps.version-mismatches-fix.outputs.has-changes }}" = "true" ]; then
-            echo "" >> comment.txt
-            echo '```' >> comment.txt
-            echo "$ syncpack fix-mismatches" >> comment.txt
-            echo "${{ steps.version-mismatches-fix.outputs.stdout }}" >> comment.txt
-            echo '```' >> comment.txt
-            echo "" >> comment.txt
-          fi
-        fi
-        if [ "${{ inputs.format-mismatches }}" = "fix" ]; then
-          if [ "${{ steps.format-mismatches-fix.outputs.has-changes }}" = "true" ]; then
-            echo "" >> comment.txt
-            echo '```' >> comment.txt
-            echo "$ syncpack format" >> comment.txt
-            echo "${{ steps.format-mismatches-fix.outputs.stdout }}" >> comment.txt
-            echo '```' >> comment.txt
-            echo "" >> comment.txt
-          fi
-        fi
-        if [ "${{ inputs.semver-range-mismatches }}" = "fix" ]; then
-          if [ "${{ steps.semver-range-mismatches-fix.outputs.has-changes }}" = "true" ]; then
-            echo "" >> comment.txt
-            echo '```' >> comment.txt
-            echo "$ syncpack set-semver-ranges" >> comment.txt
-            echo "${{ steps.semver-range-mismatches-fix.outputs.stdout }}" >> comment.txt
-            echo '```' >> comment.txt
-            echo "" >> comment.txt
-          fi
-        fi
-        body=$(cat comment.txt)
-        body="${body//'%'/'%25'}"
-        body="${body//$'\n'/'%0A'}"
-        body="${body//$'\r'/'%0D'}"
-        echo "::set-output name=body::"$body""
+    # - if: always()
+    #   name: Get Comment Body
+    #   id: get-comment-body
+    #   shell: bash
+    #   run: |
+    #     touch comment.txt
+    #     if [ "${{ inputs.version-mismatches }}" = "lint" ]; then
+    #       if [ "${{ steps.version-mismatches-lint.outcome }}" = "success" ]; then
+    #         echo '```' >> comment.txt
+    #         echo "$ syncpack list-mismatches" >> comment.txt
+    #         echo "✓" >> comment.txt
+    #         echo '```' >> comment.txt
+    #         echo "" >> comment.txt
+    #       fi
+    #       if [ "${{ steps.version-mismatches-lint.outcome }}" = "failure" ]; then
+    #         echo "" >> comment.txt
+    #         echo '```' >> comment.txt
+    #         echo "$ syncpack list-mismatches" >> comment.txt
+    #         echo "${{ steps.version-mismatches-lint.outputs.stdout }}" >> comment.txt
+    #         echo '```' >> comment.txt
+    #         echo "" >> comment.txt
+    #       fi
+    #     fi
+    #     if [ "${{ inputs.semver-range-mismatches }}" = "lint" ]; then
+    #       if [ "${{ steps.semver-range-mismatches-lint.outcome }}" = "success" ]; then
+    #         echo '```' >> comment.txt
+    #         echo "$ syncpack lint-semver-ranges" >> comment.txt
+    #         echo "✓" >> comment.txt
+    #         echo '```' >> comment.txt
+    #         echo "" >> comment.txt
+    #       fi
+    #       if [ "${{ steps.semver-range-mismatches-lint.outcome }}" = "failure" ]; then
+    #         echo "" >> comment.txt
+    #         echo '```' >> comment.txt
+    #         echo "$ syncpack lint-semver-ranges" >> comment.txt
+    #         echo "${{ steps.semver-range-mismatches-lint.outputs.stdout }}" >> comment.txt
+    #         echo '```' >> comment.txt
+    #         echo "" >> comment.txt
+    #       fi
+    #     fi
+    #     if [ "${{ inputs.version-mismatches }}" = "fix" ]; then
+    #       if [ "${{ steps.version-mismatches-fix.outputs.has-changes }}" = "true" ]; then
+    #         echo "" >> comment.txt
+    #         echo '```' >> comment.txt
+    #         echo "$ syncpack fix-mismatches" >> comment.txt
+    #         echo "${{ steps.version-mismatches-fix.outputs.stdout }}" >> comment.txt
+    #         echo '```' >> comment.txt
+    #         echo "" >> comment.txt
+    #       fi
+    #     fi
+    #     if [ "${{ inputs.format-mismatches }}" = "fix" ]; then
+    #       if [ "${{ steps.format-mismatches-fix.outputs.has-changes }}" = "true" ]; then
+    #         echo "" >> comment.txt
+    #         echo '```' >> comment.txt
+    #         echo "$ syncpack format" >> comment.txt
+    #         echo "${{ steps.format-mismatches-fix.outputs.stdout }}" >> comment.txt
+    #         echo '```' >> comment.txt
+    #         echo "" >> comment.txt
+    #       fi
+    #     fi
+    #     if [ "${{ inputs.semver-range-mismatches }}" = "fix" ]; then
+    #       if [ "${{ steps.semver-range-mismatches-fix.outputs.has-changes }}" = "true" ]; then
+    #         echo "" >> comment.txt
+    #         echo '```' >> comment.txt
+    #         echo "$ syncpack set-semver-ranges" >> comment.txt
+    #         echo "${{ steps.semver-range-mismatches-fix.outputs.stdout }}" >> comment.txt
+    #         echo '```' >> comment.txt
+    #         echo "" >> comment.txt
+    #       fi
+    #     fi
+    #     body=$(cat comment.txt)
+    #     body="${body//'%'/'%25'}"
+    #     body="${body//$'\n'/'%0A'}"
+    #     body="${body//$'\r'/'%0D'}"
+    #     echo "::set-output name=body::"$body""
 
     # - if: always()
     #   name: Find Comment
