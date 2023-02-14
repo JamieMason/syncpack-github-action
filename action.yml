@@ -88,7 +88,8 @@ runs:
       shell: bash
       run: |
         git fetch
-        git pull origin $GITHUB_HEAD_REF
+        git checkout ${{ inputs.base-branch }}
+        git pull origin 
         git checkout -b ${{ inputs.branch }}
 
     # Version Mismatches
@@ -211,22 +212,22 @@ runs:
         fi
 
     - if: ${{ steps.init.outputs.anyFixEnabled == 'true' }}
-        name: Commit and Create PR
-        id: commit-and-push
-        shell: bash
-        run: |
-          if [ "${{ steps.detect-changes.outputs.has-changes }}" = "true" ]; then
-            git add .
-            git config user.name "${{ inputs.bot-username }}"
-            git config user.email "${{ inputs.bot-email }}"
-            git commit -m "${{ inputs.commit-message }}"
-          fi
-        name: Create Pull Request
-        uses: peter-evans/create-pull-request@v4
-        with: 
-          base: ${{ inputs.base-branch }}
-          reviewers: "zerodom30"
-          branch: ${{ inputs.branch }}
+      name: Commit and Create PR
+      id: commit-and-push
+      shell: bash
+      run: |
+        if [ "${{ steps.detect-changes.outputs.has-changes }}" = "true" ]; then
+          git add .
+          git config user.name "${{ inputs.bot-username }}"
+          git config user.email "${{ inputs.bot-email }}"
+          git commit -m "${{ inputs.commit-message }}"
+        fi
+      name: Create Pull Request
+      uses: peter-evans/create-pull-request@v4
+      with: 
+        base: ${{ inputs.base-branch }}
+        reviewers: "zerodom30"
+        branch: ${{ inputs.branch }}
 
     - if: always()
       name: Get Comment Body
