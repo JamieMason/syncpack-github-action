@@ -224,13 +224,13 @@ runs:
           git push --set-upstream origin "${{ inputs.branch }}"
         fi
 
-    - if: ${{ steps.init.outputs.anyFixEnabled == 'true' }}    
-      name: Create Pull Request
-      uses: peter-evans/create-pull-request@v4
-      with: 
-        base: ${{ inputs.base-branch }}
-        reviewers: "zerodom30"
-        branch: ${{ inputs.branch }}
+    # - if: ${{ steps.init.outputs.anyFixEnabled == 'true' }}    
+    #   name: Create Pull Request
+    #   uses: peter-evans/create-pull-request@v4
+    #   with: 
+    #     base: ${{ inputs.base-branch }}
+    #     reviewers: "zerodom30"
+    #     branch: ${{ inputs.branch }}
 
     # - if: always()
     #   name: Get Comment Body
