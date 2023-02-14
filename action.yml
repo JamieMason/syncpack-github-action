@@ -222,6 +222,8 @@ runs:
           git config user.email "${{ inputs.bot-email }}"
           git commit -m "${{ inputs.commit-message }}"
         fi
+
+    - if: ${{ steps.init.outputs.anyFixEnabled == 'true' }}    
       name: Create Pull Request
       uses: peter-evans/create-pull-request@v4
       with: 
