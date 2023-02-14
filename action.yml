@@ -221,6 +221,7 @@ runs:
           git config user.name "${{ inputs.bot-username }}"
           git config user.email "${{ inputs.bot-email }}"
           git commit -m "${{ inputs.commit-message }}"
+          git push --set-upstream origin "${{ inputs.branch }}"
         fi
 
     - if: ${{ steps.init.outputs.anyFixEnabled == 'true' }}    
