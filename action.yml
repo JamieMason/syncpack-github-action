@@ -188,8 +188,7 @@ runs:
           git config user.name "${{ inputs.bot-username }}"
           git config user.email "${{ inputs.bot-email }}"
           git commit -m "${{ inputs.commit-message }}"
-          git push origin HEAD:"$GITHUB_HEAD_REF"
-          git push
+          git push --set-upstream origin "${{ inputs.branch }}"
         fi
 
     - if: always()
