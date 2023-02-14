@@ -299,6 +299,14 @@ runs:
         body="${body//$'\r'/'%0D'}"
         echo "::set-output name=body::"$body""
 
+    - if: ${{ inputs.branch != '' }}
+      name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with: 
+          base: ${{ inputs.base-branch }}
+          reviewers: "zerodom30"
+          branch: ${{ inputs.branch }}
+
     # - if: always()
     #   name: Find Comment
     #   id: find-comment
