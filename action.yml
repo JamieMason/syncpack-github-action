@@ -72,7 +72,7 @@ runs:
       run: |
         npm i -g "syncpack@${{ inputs.syncpack-version }}"
 
-    - if: ${{ steps.init.outputs.anyFixEnabled == 'true' && inputs.branch != '' }}
+    - if: ${{ steps.init.outputs.anyFixEnabled == 'true' && inputs.branch == '' }}
       name: Checkout Branch
       id: checkout-branch
       shell: bash
@@ -178,19 +178,6 @@ runs:
           echo "::set-output name=has-changes::true"
         fi
 
-    - if: ${{ steps.init.outputs.anyFixEnabled == 'true' }}
-      name: Commit and Push
-      id: commit-and-push
-      shell: bash
-      run: |
-        if [ "${{ steps.detect-changes.outputs.has-changes }}" = "true" ]; then
-          git add .
-          git config user.name "${{ inputs.bot-username }}"
-          git config user.email "${{ inputs.bot-email }}"
-          git commit -m "${{ inputs.commit-message }}"
-          git push --set-upstream origin "${{ inputs.branch }}"
-        fi
-
     - if: always()
       name: syncpack list-mismatches
       id: version-mismatches-lint
@@ -222,6 +209,24 @@ runs:
           set -e
           syncpack lint-semver-ranges
         fi
+
+    - if: ${{ steps.init.outputs.anyFixEnabled == 'true' }}
+        name: Commit and Create PR
+        id: commit-and-push
+        shell: bash
+        run: |
+          if [ "${{ steps.detect-changes.outputs.has-changes }}" = "true" ]; then
+            git add .
+            git config user.name "${{ inputs.bot-username }}"
+            git config user.email "${{ inputs.bot-email }}"
+            git commit -m "${{ inputs.commit-message }}"
+          fi
+        name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with: 
+          base: ${{ inputs.base-branch }}
+          reviewers: "zerodom30"
+          branch: ${{ inputs.branch }}
 
     - if: always()
       name: Get Comment Body
@@ -298,14 +303,6 @@ runs:
         body="${body//$'\n'/'%0A'}"
         body="${body//$'\r'/'%0D'}"
         echo "::set-output name=body::"$body""
-
-    - if: ${{ inputs.branch != '' }}
-      name: Create Pull Request
-      uses: peter-evans/create-pull-request@v4
-      with: 
-        base: ${{ inputs.base-branch }}
-        reviewers: "zerodom30"
-        branch: ${{ inputs.branch }}
 
     # - if: always()
     #   name: Find Comment
