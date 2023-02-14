@@ -300,24 +300,24 @@ runs:
         body="${body//$'\r'/'%0D'}"
         echo "::set-output name=body::"$body""
 
-    - if: always()
-      name: Find Comment
-      id: find-comment
-      uses: peter-evans/find-comment@v2
-      with:
-        issue-number: ${{ github.event.pull_request.number }}
-        comment-author: ${{ inputs.bot-username }}
-        body-includes: '<!-- syncpack-bot -->'
+    # - if: always()
+    #   name: Find Comment
+    #   id: find-comment
+    #   uses: peter-evans/find-comment@v2
+    #   with:
+    #     issue-number: ${{ github.event.pull_request.number }}
+    #     comment-author: ${{ inputs.bot-username }}
+    #     body-includes: '<!-- syncpack-bot -->'
 
-    - if: always()
-      name: Upsert Comment
-      id: upsert-comment
-      uses: peter-evans/create-or-update-comment@v2
-      with:
-        comment-id: ${{ steps.find-comment.outputs.comment-id }}
-        issue-number: ${{ github.event.pull_request.number }}
-        edit-mode: replace
-        body: |
-          Synchronise monorepo dependency versions with [`syncpack`](https://github.com/zerodom30/syncpack)
-          ${{ steps.get-comment-body.outputs.body }}
-          <!-- syncpack-bot -->
+    # - if: always()
+    #   name: Upsert Comment
+    #   id: upsert-comment
+    #   uses: peter-evans/create-or-update-comment@v2
+    #   with:
+    #     comment-id: ${{ steps.find-comment.outputs.comment-id }}
+    #     issue-number: ${{ github.event.pull_request.number }}
+    #     edit-mode: replace
+    #     body: |
+    #       Synchronise monorepo dependency versions with [`syncpack`](https://github.com/zerodom30/syncpack)
+    #       ${{ steps.get-comment-body.outputs.body }}
+    #       <!-- syncpack-bot -->
