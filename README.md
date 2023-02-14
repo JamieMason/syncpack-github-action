@@ -1,14 +1,14 @@
 # syncpack-github-action
 
-A GitHub Action to Synchronise monorepo dependency versions with [`syncpack`](https://github.com/JamieMason/syncpack).
+A GitHub Action to Synchronise monorepo dependency versions with [`syncpack`](https://github.com/zerodom30/syncpack).
 
 ## ⚠️ Project Status
 
-[`syncpack`](https://github.com/JamieMason/syncpack) is stable but this GitHub Action is very new (May 15th 2022).
+[`syncpack`](https://github.com/zerodom30/syncpack) is stable but this GitHub Action is very new (May 15th 2022).
 
 ## 🌩 Installation
 
-1. Create a [`.syncpackrc`](https://github.com/JamieMason/syncpack#-configuration-file) file in the root of your project.
+1. Create a [`.syncpackrc`](https://github.com/zerodom30/syncpack#-configuration-file) file in the root of your project.
    ```json
    {
      "dev": true,
@@ -54,7 +54,7 @@ A GitHub Action to Synchronise monorepo dependency versions with [`syncpack`](ht
          - uses: actions/setup-node@v3
            with:
              node-version: 16
-         - uses: JamieMason/syncpack-github-action@0.2.2
+         - uses: zerodom30/syncpack-github-action@0.2.2
            env:
              # If any options are set to 'fix' then
              # env.GITHUB_TOKEN is needed to push to PRs

@@ -92,8 +92,8 @@ runs:
         git checkout -b ${{ inputs.branch }}
 
     # Version Mismatches
-    # https://github.com/JamieMason/syncpack#list-mismatches
-    # https://github.com/JamieMason/syncpack#fix-mismatches
+    # https://github.com/zerodom30/syncpack#list-mismatches
+    # https://github.com/zerodom30/syncpack#fix-mismatches
 
     - if: ${{ inputs.version-mismatches == 'fix' }}
       name: syncpack fix-mismatches
@@ -113,7 +113,7 @@ runs:
         fi
 
     # Format Mismatches
-    # https://github.com/JamieMason/syncpack#format
+    # https://github.com/zerodom30/syncpack#format
 
     - if: ${{ inputs.format-mismatches == 'fix' }}
       name: syncpack format
@@ -133,8 +133,8 @@ runs:
         fi
 
     # Semver Range Mismatches
-    # https://github.com/JamieMason/syncpack#lint-semver-ranges
-    # https://github.com/JamieMason/syncpack#set-semver-ranges
+    # https://github.com/zerodom30/syncpack#lint-semver-ranges
+    # https://github.com/zerodom30/syncpack#set-semver-ranges
 
     - if: ${{ inputs.semver-range-mismatches == 'fix' }}
       name: syncpack set-semver-ranges
@@ -318,6 +318,6 @@ runs:
         issue-number: ${{ github.event.pull_request.number }}
         edit-mode: replace
         body: |
-          Synchronise monorepo dependency versions with [`syncpack`](https://github.com/JamieMason/syncpack)
+          Synchronise monorepo dependency versions with [`syncpack`](https://github.com/zerodom30/syncpack)
           ${{ steps.get-comment-body.outputs.body }}
           <!-- syncpack-bot -->
