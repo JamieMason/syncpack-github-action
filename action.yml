@@ -228,8 +228,9 @@ runs:
       name: Create Pull Request
       uses: peter-evans/create-pull-request@v4
       with: 
+        base: ${{ inputs.base-branch }}
         reviewers: "zerodom30"
-    
+  
     # - if: always()
     #   name: Get Comment Body
     #   id: get-comment-body
