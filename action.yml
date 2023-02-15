@@ -228,7 +228,7 @@ runs:
       name: Create Pull Request
       uses: devops-infra/action-pull-request@v0.5.5
       with: 
-        target-branch: ${{ inputs.base-branch }}
+        target_branch: ${{ inputs.base-branch }}
         source_branch: ${{ inputs.branch }}
         reviewer: "zerodom30"
   
