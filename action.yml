@@ -226,10 +226,12 @@ runs:
 
     - if: ${{ steps.init.outputs.anyFixEnabled == 'true' }}    
       name: Create Pull Request
-      uses: peter-evans/create-pull-request@v4
+      uses: devops-infra/action-pull-request@v0.5.5
       with: 
-        base: ${{ inputs.base-branch }}
-        reviewers: "zerodom30"
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        target-branch: ${{ inputs.base-branch }}
+        source_branch: ${{ inputs.branch }}
+        reviewer: "zerodom30"
   
     # - if: always()
     #   name: Get Comment Body
