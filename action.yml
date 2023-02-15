@@ -54,6 +54,9 @@ inputs:
     description: 'Name of branch to create pull request against'
     required: false     
     default: 'main'
+  github-token: 
+    description: 'Name of branch to create pull request against'
+    required: true
 
 runs:
   using: 'composite'
@@ -228,6 +231,7 @@ runs:
       name: Create Pull Request
       uses: devops-infra/action-pull-request@v0.5.5
       with: 
+        github_token: ${{ inputs.github-token }}
         target_branch: ${{ inputs.base-branch }}
         source_branch: ${{ inputs.branch }}
         reviewer: "zerodom30"
