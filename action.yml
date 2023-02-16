@@ -58,6 +58,9 @@ inputs:
     description: 'List of reviewer(s) comma separated, required for Pull Requests'
     required: false
     default: '' 
+  github-token:   
+    description: 'Github token'
+    required: true
 
 runs:
   using: 'composite'
@@ -232,105 +235,8 @@ runs:
       name: Create Pull Request
       uses: devops-infra/action-pull-request@v0.5.5
       with: 
-        github_token: ${{ env.GITHUB_TOKEN }}
+        github_token: ${{ inputs.github-token }}
         target_branch: ${{ inputs.base-branch }}
         source_branch: ${{ inputs.branch }}
         reviewer: ${{ inputs.reviewers }}
-  
-    # - if: always()
-    #   name: Get Comment Body
-    #   id: get-comment-body
-    #   shell: bash
-    #   run: |
-    #     touch comment.txt
-    #     if [ "${{ inputs.version-mismatches }}" = "lint" ]; then
-    #       if [ "${{ steps.version-mismatches-lint.outcome }}" = "success" ]; then
-    #         echo '```' >> comment.txt
-    #         echo "$ syncpack list-mismatches" >> comment.txt
-    #         echo "✓" >> comment.txt
-    #         echo '```' >> comment.txt
-    #         echo "" >> comment.txt
-    #       fi
-    #       if [ "${{ steps.version-mismatches-lint.outcome }}" = "failure" ]; then
-    #         echo "" >> comment.txt
-    #         echo '```' >> comment.txt
-    #         echo "$ syncpack list-mismatches" >> comment.txt
-    #         echo "${{ steps.version-mismatches-lint.outputs.stdout }}" >> comment.txt
-    #         echo '```' >> comment.txt
-    #         echo "" >> comment.txt
-    #       fi
-    #     fi
-    #     if [ "${{ inputs.semver-range-mismatches }}" = "lint" ]; then
-    #       if [ "${{ steps.semver-range-mismatches-lint.outcome }}" = "success" ]; then
-    #         echo '```' >> comment.txt
-    #         echo "$ syncpack lint-semver-ranges" >> comment.txt
-    #         echo "✓" >> comment.txt
-    #         echo '```' >> comment.txt
-    #         echo "" >> comment.txt
-    #       fi
-    #       if [ "${{ steps.semver-range-mismatches-lint.outcome }}" = "failure" ]; then
-    #         echo "" >> comment.txt
-    #         echo '```' >> comment.txt
-    #         echo "$ syncpack lint-semver-ranges" >> comment.txt
-    #         echo "${{ steps.semver-range-mismatches-lint.outputs.stdout }}" >> comment.txt
-    #         echo '```' >> comment.txt
-    #         echo "" >> comment.txt
-    #       fi
-    #     fi
-    #     if [ "${{ inputs.version-mismatches }}" = "fix" ]; then
-    #       if [ "${{ steps.version-mismatches-fix.outputs.has-changes }}" = "true" ]; then
-    #         echo "" >> comment.txt
-    #         echo '```' >> comment.txt
-    #         echo "$ syncpack fix-mismatches" >> comment.txt
-    #         echo "${{ steps.version-mismatches-fix.outputs.stdout }}" >> comment.txt
-    #         echo '```' >> comment.txt
-    #         echo "" >> comment.txt
-    #       fi
-    #     fi
-    #     if [ "${{ inputs.format-mismatches }}" = "fix" ]; then
-    #       if [ "${{ steps.format-mismatches-fix.outputs.has-changes }}" = "true" ]; then
-    #         echo "" >> comment.txt
-    #         echo '```' >> comment.txt
-    #         echo "$ syncpack format" >> comment.txt
-    #         echo "${{ steps.format-mismatches-fix.outputs.stdout }}" >> comment.txt
-    #         echo '```' >> comment.txt
-    #         echo "" >> comment.txt
-    #       fi
-    #     fi
-    #     if [ "${{ inputs.semver-range-mismatches }}" = "fix" ]; then
-    #       if [ "${{ steps.semver-range-mismatches-fix.outputs.has-changes }}" = "true" ]; then
-    #         echo "" >> comment.txt
-    #         echo '```' >> comment.txt
-    #         echo "$ syncpack set-semver-ranges" >> comment.txt
-    #         echo "${{ steps.semver-range-mismatches-fix.outputs.stdout }}" >> comment.txt
-    #         echo '```' >> comment.txt
-    #         echo "" >> comment.txt
-    #       fi
-    #     fi
-    #     body=$(cat comment.txt)
-    #     body="${body//'%'/'%25'}"
-    #     body="${body//$'\n'/'%0A'}"
-    #     body="${body//$'\r'/'%0D'}"
-    #     echo "::set-output name=body::"$body""
-
-    # - if: always()
-    #   name: Find Comment
-    #   id: find-comment
-    #   uses: peter-evans/find-comment@v2
-    #   with:
-    #     issue-number: ${{ github.event.pull_request.number }}
-    #     comment-author: ${{ inputs.bot-username }}
-    #     body-includes: '<!-- syncpack-bot -->'
-
-    # - if: always()
-    #   name: Upsert Comment
-    #   id: upsert-comment
-    #   uses: peter-evans/create-or-update-comment@v2
-    #   with:
-    #     comment-id: ${{ steps.find-comment.outputs.comment-id }}
-    #     issue-number: ${{ github.event.pull_request.number }}
-    #     edit-mode: replace
-    #     body: |
-    #       Synchronise monorepo dependency versions with [`syncpack`](https://github.com/zerodom30/syncpack)
-    #       ${{ steps.get-comment-body.outputs.body }}
-    #       <!-- syncpack-bot -->
+             
