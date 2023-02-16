@@ -235,7 +235,7 @@ runs:
       name: Create Pull Request
       uses: devops-infra/action-pull-request@v0.5.5
       with: 
-        github_token: ${{ inputs.github-token }}
+        github_token: ${{ env.GITHUB_TOKEN }}
         target_branch: ${{ inputs.base-branch }}
         source_branch: ${{ inputs.branch }}
         reviewer: ${{ inputs.reviewers }}
