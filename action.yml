@@ -54,6 +54,10 @@ inputs:
     description: 'Name of branch to create pull request against'
     required: false     
     default: 'main'
+  reviewers: 
+    description: 'List of reviewer(s) comma separated, required for Pull Requests'
+    required: false
+    default: '' 
 
 runs:
   using: 'composite'
@@ -231,7 +235,7 @@ runs:
         github_token: ${{ env.GITHUB_TOKEN }}
         target_branch: ${{ inputs.base-branch }}
         source_branch: ${{ inputs.branch }}
-        reviewer: "zerodom30"
+        reviewer: ${{ inputs.reviewers }}
   
     # - if: always()
     #   name: Get Comment Body
