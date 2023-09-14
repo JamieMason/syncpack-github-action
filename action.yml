@@ -55,7 +55,7 @@ runs:
       shell: bash
       run: |
         if [ "${{ inputs.version-mismatches }}" = "fix" ] || [ "${{ inputs.format-mismatches }}" = "fix" ] || [ "${{ inputs.semver-range-mismatches }}" = "fix" ]; then
-          echo "::set-output name=anyFixEnabled::true"
+          echo "anyFixEnabled=true" >> $GITHUB_OUTPUT
         fi
 
     - name: Install Syncpack
@@ -88,11 +88,11 @@ runs:
         value="${value//'%'/'%25'}"
         value="${value//$'\n'/'%0A'}"
         value="${value//$'\r'/'%0D'}"
-        echo "::set-output name=stdout::$value"
+        echo "stdout=$value" >> $GITHUB_OUTPUT
         set -e
         if [[ `git diff --name-only` ]]; then
           git add .
-          echo "::set-output name=has-changes::true"
+          echo "has-changes=true" >> $GITHUB_OUTPUT
         fi
 
     # Format Mismatches
@@ -108,11 +108,11 @@ runs:
         value="${value//'%'/'%25'}"
         value="${value//$'\n'/'%0A'}"
         value="${value//$'\r'/'%0D'}"
-        echo "::set-output name=stdout::$value"
+        echo "stdout=$value" >> $GITHUB_OUTPUT
         set -e
         if [[ `git diff --name-only` ]]; then
           git add .
-          echo "::set-output name=has-changes::true"
+          echo "has-changes=true" >> $GITHUB_OUTPUT
         fi
 
     # Semver Range Mismatches
@@ -129,11 +129,11 @@ runs:
         value="${value//'%'/'%25'}"
         value="${value//$'\n'/'%0A'}"
         value="${value//$'\r'/'%0D'}"
-        echo "::set-output name=stdout::$value"
+        echo "stdout=$value" >> $GITHUB_OUTPUT
         set -e
         if [[ `git diff --name-only` ]]; then
           git add .
-          echo "::set-output name=has-changes::true"
+          echo "has-changes=true" >> $GITHUB_OUTPUT
         fi
 
     - if: ${{ inputs.lockfile-mismatches != 'ignore' }}
@@ -158,7 +158,7 @@ runs:
       shell: bash
       run: |
         if [[ `git status --porcelain` ]]; then
-          echo "::set-output name=has-changes::true"
+          echo "has-changes=true" >> $GITHUB_OUTPUT
         fi
 
     - if: ${{ steps.init.outputs.anyFixEnabled == 'true' }}
@@ -186,7 +186,7 @@ runs:
           value="${value//'%'/'%25'}"
           value="${value//$'\n'/'%0A'}"
           value="${value//$'\r'/'%0D'}"
-          echo "::set-output name=stdout::$value"
+          echo "stdout=$value" >> $GITHUB_OUTPUT
           set -e
           syncpack list-mismatches
         fi
@@ -202,7 +202,7 @@ runs:
           value="${value//'%'/'%25'}"
           value="${value//$'\n'/'%0A'}"
           value="${value//$'\r'/'%0D'}"
-          echo "::set-output name=stdout::$value"
+          echo "stdout=$value" >> $GITHUB_OUTPUT
           set -e
           syncpack lint-semver-ranges
         fi
@@ -281,7 +281,7 @@ runs:
         body="${body//'%'/'%25'}"
         body="${body//$'\n'/'%0A'}"
         body="${body//$'\r'/'%0D'}"
-        echo "::set-output name=body::"$body""
+        echo "body="$body"" >> $GITHUB_OUTPUT
 
     - if: always()
       name: Find Comment
