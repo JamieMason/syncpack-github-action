@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - uses: JamieMason/syncpack-github-action@0.2.2
+      - uses: JamieMason/syncpack-github-action@0.2.3
         env:
           # If any options are set to 'fix' then
           # env.GITHUB_TOKEN is needed to push to PRs
